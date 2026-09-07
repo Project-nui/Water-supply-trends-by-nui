@@ -1,0 +1,6 @@
+{
+  "name": "ระบบติดตามการใช้น้ำ — แผงควบคุม",
+  "description": "ระบบติดตามการใช้น้ำประปาและเครือข่าย PWP / CWP พร้อมการวิเคราะห์รายวัน รายเดือน และสรุปเปรียบเทียบปีต่อปี (YoY)",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
