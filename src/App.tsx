@@ -4,16 +4,18 @@
  */
 
 import { useState } from 'react';
-import { ActiveView, WaterRecord, ToastMessage } from './types';
+import { ActiveView, WaterRecord, ToastMessage, HourlyIntervalRecord } from './types';
 import { INITIAL_DATA } from './data';
 import { Sidebar } from './components/Sidebar';
 import { Topbar } from './components/Topbar';
 import { DashboardView } from './components/DashboardView';
+import { HourlyFlowView } from './components/HourlyFlowView';
 import { DailyView } from './components/DailyView';
 import { MonthlyView } from './components/MonthlyView';
 import { YearlyView } from './components/YearlyView';
 import { Toast } from './components/Toast';
 import { LoginGate } from './components/LoginGate';
+import { generateInitialHourlyIntervals } from './utils/totalizerParser';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -43,6 +45,22 @@ export default function App() {
     return INITIAL_DATA;
   });
 
+  const [hourlyIntervals, setHourlyIntervals] = useState<HourlyIntervalRecord[]>(() => {
+    try {
+      const saved = localStorage.getItem('hourly_records_v1');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return generateInitialHourlyIntervals(INITIAL_DATA);
+  });
+
+  const [selectedHourlyDate, setSelectedHourlyDate] = useState<string>('');
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [toast, setToast] = useState<ToastMessage | null>(null);
 
@@ -95,6 +113,45 @@ export default function App() {
     showToast(`นำเข้าสำเร็จ: เพิ่มใหม่ ${added} รายการ, อัปเดต ${updated} รายการ${skipMsg}`, 'success');
   };
 
+  const handleImportTotalizer = (
+    newIntervals: HourlyIntervalRecord[],
+    dailyAggregates: WaterRecord[],
+    summaryMsg: string
+  ) => {
+    // 1. Merge intervals
+    const intervalMap = new Map<string, HourlyIntervalRecord>(
+      hourlyIntervals.map((i) => [i.id, i])
+    );
+    newIntervals.forEach((i) => {
+      intervalMap.set(i.id, i);
+    });
+    const mergedIntervals = Array.from(intervalMap.values()).sort((a, b) =>
+      a.startTimestamp.localeCompare(b.startTimestamp)
+    );
+    setHourlyIntervals(mergedIntervals);
+    try {
+      localStorage.setItem('hourly_records_v1', JSON.stringify(mergedIntervals));
+    } catch {
+      // storage might be full
+    }
+
+    // 2. Merge daily aggregates into general WaterRecord list
+    const dataMap = new Map<string, WaterRecord>(data.map((d) => [d.date, { ...d }]));
+    dailyAggregates.forEach((d) => {
+      dataMap.set(d.date, d);
+    });
+    const mergedData = Array.from(dataMap.values()).sort((a, b) => a.date.localeCompare(b.date));
+    setData(mergedData);
+    try {
+      localStorage.setItem('water_records_v1', JSON.stringify(mergedData));
+    } catch {
+      // ignore
+    }
+
+    // 3. Navigate to hourly view so user sees computed results immediately
+    setActiveView('hourly');
+  };
+
   if (!isAuthenticated) {
     return (
       <>
@@ -117,6 +174,7 @@ export default function App() {
         <Topbar
           activeView={activeView}
           onImportData={handleImportData}
+          onImportTotalizer={handleImportTotalizer}
           data={data}
           showToast={showToast}
           onLogout={handleLogout}
@@ -124,7 +182,23 @@ export default function App() {
 
         <div className="flex-1">
           {activeView === 'dashboard' && <DashboardView data={data} />}
-          {activeView === 'daily' && <DailyView data={data} />}
+          {activeView === 'hourly' && (
+            <HourlyFlowView
+              intervals={hourlyIntervals}
+              initialSelectedDate={selectedHourlyDate}
+              onImportTotalizer={handleImportTotalizer}
+              showToast={showToast}
+            />
+          )}
+          {activeView === 'daily' && (
+            <DailyView
+              data={data}
+              onSelectHourly={(d) => {
+                setSelectedHourlyDate(d);
+                setActiveView('hourly');
+              }}
+            />
+          )}
           {activeView === 'monthly' && <MonthlyView data={data} />}
           {activeView === 'yearly' && <YearlyView data={data} showToast={showToast} />}
         </div>

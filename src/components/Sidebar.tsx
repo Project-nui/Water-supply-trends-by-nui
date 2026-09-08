@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActiveView } from '../types';
-import { Activity, Calendar, BarChart3, TrendingUp, LogOut, Code2 } from 'lucide-react';
+import { Activity, Calendar, Clock, BarChart3, TrendingUp, LogOut, Code2 } from 'lucide-react';
 
 interface SidebarProps {
   activeView: ActiveView;
@@ -46,14 +46,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
               id="nav-btn-dashboard"
               type="button"
               onClick={() => onSelectView('dashboard')}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-all whitespace-nowrap text-left border cursor-pointer ${
+              className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-all whitespace-nowrap text-left border cursor-pointer ${
                 activeView === 'dashboard'
-                  ? 'bg-blue-600/10 text-blue-400 border-blue-600/20 font-medium shadow-sm'
+                  ? 'bg-blue-600/15 text-blue-300 border-blue-500/30 font-medium shadow-sm ring-1 ring-blue-500/20'
                   : 'text-slate-400 border-transparent hover:bg-white/5 hover:text-white'
               }`}
             >
-              <Activity className="w-4 h-4 shrink-0 text-blue-400" />
-              <span>ภาพรวม (Dashboard)</span>
+              <div className="flex items-center gap-3">
+                <Activity className="w-4 h-4 shrink-0 text-blue-400" />
+                <span>ภาพรวม (Dashboard)</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                KPI
+              </span>
+            </button>
+
+            <button
+              id="nav-btn-hourly"
+              type="button"
+              onClick={() => onSelectView('hourly')}
+              className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg text-sm transition-all whitespace-nowrap text-left border cursor-pointer ${
+                activeView === 'hourly'
+                  ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 font-medium shadow-sm ring-1 ring-cyan-500/20'
+                  : 'text-slate-400 border-transparent hover:bg-white/5 hover:text-white'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Clock className="w-4 h-4 shrink-0 text-cyan-400" />
+                <span>การไหลรายชั่วโมง (Hourly Flow)</span>
+              </div>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                3 Tags
+              </span>
             </button>
 
             <button

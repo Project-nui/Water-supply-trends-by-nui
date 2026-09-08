@@ -2,14 +2,16 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { WaterRecord } from '../types';
 import { fmt, fmtDateTH } from '../utils/formatters';
 import { Chart, registerables } from 'chart.js';
+import { Clock } from 'lucide-react';
 
 Chart.register(...registerables);
 
 interface DailyViewProps {
   data: WaterRecord[];
+  onSelectHourly?: (date: string) => void;
 }
 
-export const DailyView: React.FC<DailyViewProps> = ({ data }) => {
+export const DailyView: React.FC<DailyViewProps> = ({ data, onSelectHourly }) => {
   const chartCanvasRef = useRef<HTMLCanvasElement>(null);
   const chartInstanceRef = useRef<Chart | null>(null);
 
@@ -229,6 +231,11 @@ export const DailyView: React.FC<DailyViewProps> = ({ data }) => {
                 <th className="text-right font-bold text-amber-400 text-[10px] uppercase tracking-wider px-4 py-3">CWP 1-4 (m³)</th>
                 <th className="text-right font-bold text-purple-400 text-[10px] uppercase tracking-wider px-4 py-3">CWP 5-7 (m³)</th>
                 <th className="text-right font-bold text-slate-300 text-[10px] uppercase tracking-wider px-4 py-3">รวมทั้งหมด (m³)</th>
+                {onSelectHourly && (
+                  <th className="text-center font-bold text-cyan-400 text-[10px] uppercase tracking-wider px-3 py-3">
+                    การไหลรายชั่วโมง
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody id="daily-table-body" className="divide-y divide-white/5">
@@ -266,12 +273,25 @@ export const DailyView: React.FC<DailyViewProps> = ({ data }) => {
                     <td className="px-4 py-2.5 text-right font-mono-num text-xs font-semibold text-white">
                       {fmt(total)}
                     </td>
+                    {onSelectHourly && (
+                      <td className="px-3 py-2.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => onSelectHourly(r.date)}
+                          className="px-2 py-1 rounded text-[10px] font-medium bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 border border-cyan-500/20 transition-colors cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                          title="ดูอัตราการไหลรายชั่วโมงของวันนี้"
+                        >
+                          <Clock className="w-3 h-3" />
+                          <span>ดูช่วงเวลา</span>
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {reversedRows.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-slate-400 text-xs">
+                  <td colSpan={onSelectHourly ? 6 : 5} className="px-4 py-12 text-center text-slate-400 text-xs">
                     ไม่พบข้อมูลในช่วงวันที่ระบุ
                   </td>
                 </tr>
